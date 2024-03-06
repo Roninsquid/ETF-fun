@@ -1,0 +1,56 @@
+import yfinance as yf
+import pandas as pd
+import plotly.graph_objs as go
+
+# Define a list of ETF symbols
+etf_symbols = ['SPY', 'QQQ', 'DIA']  # Example ETFs (S&P 500, Nasdaq 100, Dow Jones Industrial Average)
+
+# Fetch historical ETF data
+def fetch_etf_data(symbols, start_date, end_date):
+    etf_data = {}
+    for symbol in symbols:
+        etf_data[symbol] = yf.download(symbol, start=start_date, end=end_date)
+    return etf_data
+
+# Calculate performance metrics
+def calculate_metrics(etf_data):
+    metrics = {}
+    for symbol, data in etf_data.items():
+        returns = data['Adj Close'].pct_change()
+        total_return = (data['Adj Close'][-1] / data['Adj Close'][0]) - 1
+        annualized_volatility = returns.std() * (252 ** 0.5)  # Assuming 252 trading days per year
+        metrics[symbol] = {
+            'Total Return': total_return,
+            'Annualized Volatility': annualized_volatility
+        }
+    return metrics
+
+# Visualize ETF data
+def visualize_data(etf_data):
+    fig = go.Figure()
+    for symbol, data in etf_data.items():
+        fig.add_trace(go.Scatter(x=data.index, y=data['Adj Close'], mode='lines', name=symbol))
+    fig.update_layout(title='ETF Performance', xaxis_title='Date', yaxis_title='Price')
+    fig.show()
+
+# Main function
+def main():
+    start_date = '2020-01-01'
+    end_date = '2024-03-01'
+
+    # Fetch ETF data
+    etf_data = fetch_etf_data(etf_symbols, start_date, end_date)
+
+    # Calculate performance metrics
+    metrics = calculate_metrics(etf_data)
+    for symbol, metric in metrics.items():
+        print(f"ETF: {symbol}")
+        print(f"Total Return: {metric['Total Return']:.2%}")
+        print(f"Annualized Volatility: {metric['Annualized Volatility']:.2%}")
+        print()
+
+    # Visualize ETF data
+    visualize_data(etf_data)
+
+if __name__ == "__main__":
+    main()
